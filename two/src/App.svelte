@@ -5,11 +5,13 @@
   import CartSummary from './CartSummary.svelte';
   import MenuItem from './MenuItem.svelte';
 
-  function calculateSubtotal() {
-      return menuItems.reduce((total, item) => {
-          const itemTotal = item.price * item.count;
-          return total + itemTotal;
-      }, 0);
+  let subtotal;
+
+  $: {
+    subtotal = menuItems.reduce((total, item) => {
+        const itemTotal = item.price * item.count;
+        return total + itemTotal;
+    }, 0);
   }
 </script>
 
@@ -20,7 +22,7 @@
 
       <ul class="menu">
         {#each menuItems as menuItem}
-          <MenuItem menuItem={menuItem} />
+          <MenuItem bind:menuItem={menuItem} />
         {/each}
       </ul>
     </div>
@@ -34,12 +36,12 @@
         <ul class="cart-summary">
           {#each menuItems as menuItem}
             {#if menuItem.count}
-              <CartItem menuItem={menuItem} />
+              <CartItem bind:menuItem={menuItem} />
             {/if}
           {/each}
         </ul>
 
-        <CartSummary subtotal={calculateSubtotal()} />
+        <CartSummary subtotal={subtotal} />
       {/if}
     </div>
   </div>

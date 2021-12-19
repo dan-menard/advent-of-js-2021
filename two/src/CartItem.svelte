@@ -16,13 +16,13 @@
   </div>
 
   <div class="quantity__wrapper">
-    <button class="decrease">
+    <button class="decrease" on:click={() => menuItem.count--}>
       <img src="images/chevron.svg" />
     </button>
 
     <div class="quantity">{menuItem.count}</div>
 
-    <button class="increase">
+    <button class="increase" on:click={() => menuItem.count++}>
       <img src="images/chevron.svg" />
     </button>
   </div>

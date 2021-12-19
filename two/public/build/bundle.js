@@ -62,6 +62,10 @@ var app = (function () {
     function empty() {
         return text('');
     }
+    function listen(node, event, handler, options) {
+        node.addEventListener(event, handler, options);
+        return () => node.removeEventListener(event, handler, options);
+    }
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
@@ -96,6 +100,9 @@ var app = (function () {
     }
     function add_render_callback(fn) {
         render_callbacks.push(fn);
+    }
+    function add_flush_callback(fn) {
+        flush_callbacks.push(fn);
     }
     // flush() calls callbacks in this order:
     // 1. All beforeUpdate callbacks, in order: parents before children
@@ -198,6 +205,14 @@ var app = (function () {
                 }
             });
             block.o(local);
+        }
+    }
+
+    function bind(component, name, callback) {
+        const index = component.$$.props[name];
+        if (index !== undefined) {
+            component.$$.bound[index] = callback;
+            callback(component.$$.ctx[index]);
         }
     }
     function create_component(block) {
@@ -344,6 +359,19 @@ var app = (function () {
         dispatch_dev('SvelteDOMRemove', { node });
         detach(node);
     }
+    function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
+        const modifiers = options === true ? ['capture'] : options ? Array.from(Object.keys(options)) : [];
+        if (has_prevent_default)
+            modifiers.push('preventDefault');
+        if (has_stop_propagation)
+            modifiers.push('stopPropagation');
+        dispatch_dev('SvelteDOMAddEventListener', { node, event, handler, modifiers });
+        const dispose = listen(node, event, handler, options);
+        return () => {
+            dispatch_dev('SvelteDOMRemoveEventListener', { node, event, handler, modifiers });
+            dispose();
+        };
+    }
     function attr_dev(node, attribute, value) {
         attr(node, attribute, value);
         if (value == null)
@@ -437,6 +465,8 @@ var app = (function () {
     	let div5;
     	let t11_value = formatPrice(/*menuItem*/ ctx[0].price * /*menuItem*/ ctx[0].count) + "";
     	let t11;
+    	let mounted;
+    	let dispose;
 
     	const block = {
     		c: function create() {
@@ -481,19 +511,19 @@ var app = (function () {
     			attr_dev(div2, "class", "content");
     			add_location(div2, file$3, 12, 2, 265);
     			if (!src_url_equal(img1.src, img1_src_value = "images/chevron.svg")) attr_dev(img1, "src", img1_src_value);
-    			add_location(img1, file$3, 19, 6, 467);
+    			add_location(img1, file$3, 19, 6, 501);
     			attr_dev(button0, "class", "decrease");
     			add_location(button0, file$3, 18, 4, 435);
     			attr_dev(div3, "class", "quantity");
-    			add_location(div3, file$3, 22, 4, 519);
+    			add_location(div3, file$3, 22, 4, 553);
     			if (!src_url_equal(img2.src, img2_src_value = "images/chevron.svg")) attr_dev(img2, "src", img2_src_value);
-    			add_location(img2, file$3, 25, 6, 601);
+    			add_location(img2, file$3, 25, 6, 669);
     			attr_dev(button1, "class", "increase");
-    			add_location(button1, file$3, 24, 4, 569);
+    			add_location(button1, file$3, 24, 4, 603);
     			attr_dev(div4, "class", "quantity__wrapper");
     			add_location(div4, file$3, 17, 2, 399);
     			attr_dev(div5, "class", "subtotal");
-    			add_location(div5, file$3, 29, 2, 660);
+    			add_location(div5, file$3, 29, 2, 728);
     			add_location(li, file$3, 6, 0, 100);
     		},
     		l: function claim(nodes) {
@@ -526,6 +556,15 @@ var app = (function () {
     			append_dev(li, t10);
     			append_dev(li, div5);
     			append_dev(div5, t11);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(button0, "click", /*click_handler*/ ctx[1], false, false, false),
+    					listen_dev(button1, "click", /*click_handler_1*/ ctx[2], false, false, false)
+    				];
+
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*menuItem*/ 1 && !src_url_equal(img0.src, img0_src_value = "images/" + /*menuItem*/ ctx[0].image)) {
@@ -546,6 +585,8 @@ var app = (function () {
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(li);
+    			mounted = false;
+    			run_all(dispose);
     		}
     	};
 
@@ -570,6 +611,9 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<CartItem> was created with unknown prop '${key}'`);
     	});
 
+    	const click_handler = () => $$invalidate(0, menuItem.count--, menuItem);
+    	const click_handler_1 = () => $$invalidate(0, menuItem.count++, menuItem);
+
     	$$self.$$set = $$props => {
     		if ('menuItem' in $$props) $$invalidate(0, menuItem = $$props.menuItem);
     	};
@@ -584,7 +628,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [menuItem];
+    	return [menuItem, click_handler, click_handler_1];
     }
 
     class CartItem extends SvelteComponentDev {
@@ -807,15 +851,17 @@ var app = (function () {
     			t = text("\n        In Cart");
     			if (!src_url_equal(img.src, img_src_value = "images/check.svg")) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "Check");
-    			add_location(img, file$1, 19, 8, 463);
+    			add_location(img, file$1, 19, 8, 506);
     			attr_dev(button, "class", "in-cart");
-    			add_location(button, file$1, 18, 6, 430);
+    			button.disabled = true;
+    			add_location(button, file$1, 18, 6, 464);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
     			append_dev(button, img);
     			append_dev(button, t);
     		},
+    		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(button);
     		}
@@ -835,6 +881,8 @@ var app = (function () {
     // (16:4) {#if !menuItem.count}
     function create_if_block$1(ctx) {
     	let button;
+    	let mounted;
+    	let dispose;
 
     	const block = {
     		c: function create() {
@@ -845,9 +893,17 @@ var app = (function () {
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
+
+    			if (!mounted) {
+    				dispose = listen_dev(button, "click", /*click_handler*/ ctx[1], false, false, false);
+    				mounted = true;
+    			}
     		},
+    		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(button);
+    			mounted = false;
+    			dispose();
     		}
     	};
 
@@ -944,7 +1000,9 @@ var app = (function () {
     			if (dirty & /*menuItem*/ 1 && t1_value !== (t1_value = /*menuItem*/ ctx[0].name + "")) set_data_dev(t1, t1_value);
     			if (dirty & /*menuItem*/ 1 && t3_value !== (t3_value = formatPrice(/*menuItem*/ ctx[0].price) + "")) set_data_dev(t3, t3_value);
 
-    			if (current_block_type !== (current_block_type = select_block_type(ctx))) {
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
     				if_block.d(1);
     				if_block = current_block_type(ctx);
 
@@ -983,6 +1041,8 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MenuItem> was created with unknown prop '${key}'`);
     	});
 
+    	const click_handler = () => $$invalidate(0, menuItem.count++, menuItem);
+
     	$$self.$$set = $$props => {
     		if ('menuItem' in $$props) $$invalidate(0, menuItem = $$props.menuItem);
     	};
@@ -997,7 +1057,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [menuItem];
+    	return [menuItem, click_handler];
     }
 
     class MenuItem extends SvelteComponentDev {
@@ -1034,25 +1094,38 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[2] = list[i];
+    	child_ctx[4] = list[i];
+    	child_ctx[5] = list;
+    	child_ctx[6] = i;
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[2] = list[i];
+    	child_ctx[4] = list[i];
+    	child_ctx[7] = list;
+    	child_ctx[8] = i;
     	return child_ctx;
     }
 
-    // (22:8) {#each menuItems as menuItem}
+    // (24:8) {#each menuItems as menuItem}
     function create_each_block_1(ctx) {
     	let menuitem;
+    	let updating_menuItem;
     	let current;
 
-    	menuitem = new MenuItem({
-    			props: { menuItem: /*menuItem*/ ctx[2] },
-    			$$inline: true
-    		});
+    	function menuitem_menuItem_binding(value) {
+    		/*menuitem_menuItem_binding*/ ctx[2](value, /*menuItem*/ ctx[4], /*each_value_1*/ ctx[7], /*menuItem_index_1*/ ctx[8]);
+    	}
+
+    	let menuitem_props = {};
+
+    	if (/*menuItem*/ ctx[4] !== void 0) {
+    		menuitem_props.menuItem = /*menuItem*/ ctx[4];
+    	}
+
+    	menuitem = new MenuItem({ props: menuitem_props, $$inline: true });
+    	binding_callbacks.push(() => bind(menuitem, 'menuItem', menuitem_menuItem_binding));
 
     	const block = {
     		c: function create() {
@@ -1062,9 +1135,16 @@ var app = (function () {
     			mount_component(menuitem, target, anchor);
     			current = true;
     		},
-    		p: function update(ctx, dirty) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
     			const menuitem_changes = {};
-    			if (dirty & /*menuItems*/ 1) menuitem_changes.menuItem = /*menuItem*/ ctx[2];
+
+    			if (!updating_menuItem && dirty & /*menuItems*/ 1) {
+    				updating_menuItem = true;
+    				menuitem_changes.menuItem = /*menuItem*/ ctx[4];
+    				add_flush_callback(() => updating_menuItem = false);
+    			}
+
     			menuitem.$set(menuitem_changes);
     		},
     		i: function intro(local) {
@@ -1085,14 +1165,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(22:8) {#each menuItems as menuItem}",
+    		source: "(24:8) {#each menuItems as menuItem}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (33:6) {:else}
+    // (35:6) {:else}
     function create_else_block(ctx) {
     	let ul;
     	let t;
@@ -1111,7 +1191,7 @@ var app = (function () {
     	});
 
     	cartsummary = new CartSummary({
-    			props: { subtotal: /*calculateSubtotal*/ ctx[1]() },
+    			props: { subtotal: /*subtotal*/ ctx[1] },
     			$$inline: true
     		});
 
@@ -1126,7 +1206,7 @@ var app = (function () {
     			t = space();
     			create_component(cartsummary.$$.fragment);
     			attr_dev(ul, "class", "cart-summary");
-    			add_location(ul, file, 33, 8, 800);
+    			add_location(ul, file, 35, 8, 792);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, ul, anchor);
@@ -1167,6 +1247,10 @@ var app = (function () {
 
     				check_outros();
     			}
+
+    			const cartsummary_changes = {};
+    			if (dirty & /*subtotal*/ 2) cartsummary_changes.subtotal = /*subtotal*/ ctx[1];
+    			cartsummary.$set(cartsummary_changes);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -1200,14 +1284,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(33:6) {:else}",
+    		source: "(35:6) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (31:6) {#if !menuItems.reduce((total, item) => total + item.count, 0)}
+    // (33:6) {#if !menuItems.reduce((total, item) => total + item.count, 0)}
     function create_if_block(ctx) {
     	let p;
 
@@ -1216,7 +1300,7 @@ var app = (function () {
     			p = element("p");
     			p.textContent = "Your cart is empty.";
     			attr_dev(p, "class", "empty");
-    			add_location(p, file, 31, 8, 737);
+    			add_location(p, file, 33, 8, 729);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -1233,22 +1317,31 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(31:6) {#if !menuItems.reduce((total, item) => total + item.count, 0)}",
+    		source: "(33:6) {#if !menuItems.reduce((total, item) => total + item.count, 0)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (36:12) {#if menuItem.count}
+    // (38:12) {#if menuItem.count}
     function create_if_block_1(ctx) {
     	let cartitem;
+    	let updating_menuItem;
     	let current;
 
-    	cartitem = new CartItem({
-    			props: { menuItem: /*menuItem*/ ctx[2] },
-    			$$inline: true
-    		});
+    	function cartitem_menuItem_binding(value) {
+    		/*cartitem_menuItem_binding*/ ctx[3](value, /*menuItem*/ ctx[4], /*each_value*/ ctx[5], /*menuItem_index*/ ctx[6]);
+    	}
+
+    	let cartitem_props = {};
+
+    	if (/*menuItem*/ ctx[4] !== void 0) {
+    		cartitem_props.menuItem = /*menuItem*/ ctx[4];
+    	}
+
+    	cartitem = new CartItem({ props: cartitem_props, $$inline: true });
+    	binding_callbacks.push(() => bind(cartitem, 'menuItem', cartitem_menuItem_binding));
 
     	const block = {
     		c: function create() {
@@ -1258,9 +1351,16 @@ var app = (function () {
     			mount_component(cartitem, target, anchor);
     			current = true;
     		},
-    		p: function update(ctx, dirty) {
+    		p: function update(new_ctx, dirty) {
+    			ctx = new_ctx;
     			const cartitem_changes = {};
-    			if (dirty & /*menuItems*/ 1) cartitem_changes.menuItem = /*menuItem*/ ctx[2];
+
+    			if (!updating_menuItem && dirty & /*menuItems*/ 1) {
+    				updating_menuItem = true;
+    				cartitem_changes.menuItem = /*menuItem*/ ctx[4];
+    				add_flush_callback(() => updating_menuItem = false);
+    			}
+
     			cartitem.$set(cartitem_changes);
     		},
     		i: function intro(local) {
@@ -1281,18 +1381,18 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(36:12) {#if menuItem.count}",
+    		source: "(38:12) {#if menuItem.count}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (35:10) {#each menuItems as menuItem}
+    // (37:10) {#each menuItems as menuItem}
     function create_each_block(ctx) {
     	let if_block_anchor;
     	let current;
-    	let if_block = /*menuItem*/ ctx[2].count && create_if_block_1(ctx);
+    	let if_block = /*menuItem*/ ctx[4].count && create_if_block_1(ctx);
 
     	const block = {
     		c: function create() {
@@ -1305,7 +1405,7 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if (/*menuItem*/ ctx[2].count) {
+    			if (/*menuItem*/ ctx[4].count) {
     				if (if_block) {
     					if_block.p(ctx, dirty);
 
@@ -1347,7 +1447,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(35:10) {#each menuItems as menuItem}",
+    		source: "(37:10) {#each menuItems as menuItem}",
     		ctx
     	});
 
@@ -1413,17 +1513,17 @@ var app = (function () {
     			h11.textContent = "Your Cart";
     			t4 = space();
     			if_block.c();
-    			add_location(h10, file, 18, 6, 438);
+    			add_location(h10, file, 20, 6, 425);
     			attr_dev(ul, "class", "menu");
-    			add_location(ul, file, 20, 6, 465);
+    			add_location(ul, file, 22, 6, 452);
     			attr_dev(div0, "class", "panel");
-    			add_location(div0, file, 17, 4, 412);
-    			add_location(h11, file, 28, 6, 639);
+    			add_location(div0, file, 19, 4, 399);
+    			add_location(h11, file, 30, 6, 631);
     			attr_dev(div1, "class", "panel cart");
-    			add_location(div1, file, 27, 4, 608);
+    			add_location(div1, file, 29, 4, 600);
     			attr_dev(div2, "class", "wrapper menu");
-    			add_location(div2, file, 16, 2, 381);
-    			add_location(main, file, 15, 0, 372);
+    			add_location(div2, file, 18, 2, 368);
+    			add_location(main, file, 17, 0, 359);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1546,22 +1646,22 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
     	let { menuItems } = $$props;
-
-    	function calculateSubtotal() {
-    		return menuItems.reduce(
-    			(total, item) => {
-    				const itemTotal = item.price * item.count;
-    				return total + itemTotal;
-    			},
-    			0
-    		);
-    	}
-
+    	let subtotal;
     	const writable_props = ['menuItems'];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<App> was created with unknown prop '${key}'`);
     	});
+
+    	function menuitem_menuItem_binding(value, menuItem, each_value_1, menuItem_index_1) {
+    		each_value_1[menuItem_index_1] = value;
+    		$$invalidate(0, menuItems);
+    	}
+
+    	function cartitem_menuItem_binding(value, menuItem, each_value, menuItem_index) {
+    		each_value[menuItem_index] = value;
+    		$$invalidate(0, menuItems);
+    	}
 
     	$$self.$$set = $$props => {
     		if ('menuItems' in $$props) $$invalidate(0, menuItems = $$props.menuItems);
@@ -1572,18 +1672,33 @@ var app = (function () {
     		CartItem,
     		CartSummary,
     		MenuItem,
-    		calculateSubtotal
+    		subtotal
     	});
 
     	$$self.$inject_state = $$props => {
     		if ('menuItems' in $$props) $$invalidate(0, menuItems = $$props.menuItems);
+    		if ('subtotal' in $$props) $$invalidate(1, subtotal = $$props.subtotal);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [menuItems, calculateSubtotal];
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*menuItems*/ 1) {
+    			{
+    				$$invalidate(1, subtotal = menuItems.reduce(
+    					(total, item) => {
+    						const itemTotal = item.price * item.count;
+    						return total + itemTotal;
+    					},
+    					0
+    				));
+    			}
+    		}
+    	};
+
+    	return [menuItems, subtotal, menuitem_menuItem_binding, cartitem_menuItem_binding];
     }
 
     class App extends SvelteComponentDev {
