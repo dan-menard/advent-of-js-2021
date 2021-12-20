@@ -5,7 +5,7 @@
   let lastClickedEpisodeId;
 
   function parseId(inputEl) {
-    return inputEl.id.split('-')[1];
+    return Number(inputEl.id.split('-')[1]);
   }
 
   function checkShiftDown(keyEvent) {
