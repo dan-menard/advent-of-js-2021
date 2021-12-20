@@ -1,30 +1,40 @@
 <script>
-	export let name;
+  //export let menuItems;
+
+  import Bill from './Bill.svelte';
+  import People from './People.svelte';
+  import TipPercentagePicker from './TipPercentagePicker.svelte';
+
+  //let subtotal;
+
+  //$: {
+  //  subtotal = menuItems.reduce((total, item) => {
+  //      const itemTotal = item.price * item.count;
+  //      return total + itemTotal;
+  //  }, 0);
+  //}
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+  <div class="wrapper">
+    <div class="tip-amount">
+      <div class="label">Tip Amount</div>
+      <div class="dollars"><sup>$</sup><span id="tip-amount">15.30</span></div>
+    </div>
+    <div class="total-per-person">
+      <div class="label">Total Per Person</div>
+      <div class="dollars"><sup>$</sup><span id="total-per-person">39.11</span></div>
+    </div>
+
+    <div class="input-fields">
+      <Bill />
+      <People />
+    </div>
+
+    <TipPercentagePicker />
+
+    <div class="button-wrapper">
+      <button id="calculate">Calculate</button>
+    </div>
+  </div>
 </main>
-
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
