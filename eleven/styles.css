@@ -83,14 +83,16 @@ a:hover .question:after {
 }
 
 .answer {
-  display: none;
+  max-height: 0;
+  overflow-y: hidden;
 }
 
 .expand .answer {
-  display: block;
+  max-height: 400px;
   background-color: #FFDD00;
   width: calc(100% - 60px);
   margin-left: 55px;
   padding: 30px 75px;
   box-sizing: border-box;
+  transition: max-height 0.4s ease-out;
 }
