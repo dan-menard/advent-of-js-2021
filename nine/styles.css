@@ -54,6 +54,12 @@ body {
   scroll-snap-stop: normal;
 }
 
+.thumbnails li:hover {
+  outline: 10px solid rgba(255, 0, 199, .3);
+  outline-offset: -10px;
+}
+
+.thumbnails li.selected:hover,
 .thumbnails .selected {
   outline: 10px solid #FF00C7;
   outline-offset: -10px;
