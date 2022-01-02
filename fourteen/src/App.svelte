@@ -3,15 +3,15 @@
 </script>
 
 <div class="wrapper">
-  <div class="previous">
+  <button class="prev">
     <img src="images/previous.svg" alt="Previous" />
-  </div>
+  </button>
 
   <div class="month">December</div>
 
-  <div class="next">
+  <button class="next">
     <img src="images/next.svg" alt="Next" />
-  </div>
+  </button>
 
   <div class="day-of-week">S</div>
   <div class="day-of-week">M</div>

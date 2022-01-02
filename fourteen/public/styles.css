@@ -32,6 +32,12 @@ div {
   justify-content: center;
 }
 
+.next,
+.prev {
+  background: none;
+  border: none;
+}
+
 .month {
   grid-column: span 5;
   font-family: 'Oswald', sans-serif;
