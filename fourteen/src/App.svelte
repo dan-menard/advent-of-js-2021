@@ -1,59 +1,76 @@
 <script>
   export let today;
+
+  const daysOfTheWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  let todayDate = today.getDate();
+  let todayMonth = today.getMonth();
+  let todayYear = today.getFullYear();
+
+  let month = today.getMonth();
+  let year = today.getFullYear();
+
+  let monthName;
+  let firstDayOfTheMonth;
+  let lastDateOfTheMonth;
+  let weekCount;
+
+  function loadPrevMonth() {
+    if (month === 0) {
+      year--;
+      month = 11;
+    } else {
+      month--;
+    }
+  }
+
+  function loadNextMonth() {
+    if (month === 11) {
+      year++;
+      month = 0;
+    } else {
+      month++;
+    }
+  }
+
+  $: {
+    monthName = Intl.DateTimeFormat('en-us', {month: 'long'}).format(new Date(year, month, 1));
+
+    firstDayOfTheMonth = new Date(year, month, 1).getDay();
+    lastDateOfTheMonth = new Date(year, month + 1, 0).getDate();
+
+    weekCount = 1;
+    let counter = 0;
+
+    while (counter < lastDateOfTheMonth) {
+      weekCount++;
+      counter+= 7;
+    }
+  }
 </script>
 
 <div class="wrapper">
-  <button class="prev">
+  <button class="prev" on:click={loadPrevMonth}>
     <img src="images/previous.svg" alt="Previous" />
   </button>
 
-  <div class="month">December</div>
+  <div class="month">{monthName}, {year}</div>
 
-  <button class="next">
+  <button class="next" on:click={loadNextMonth}>
     <img src="images/next.svg" alt="Next" />
   </button>
 
-  <div class="day-of-week">S</div>
-  <div class="day-of-week">M</div>
-  <div class="day-of-week">T</div>
-  <div class="day-of-week">W</div>
-  <div class="day-of-week">T</div>
-  <div class="day-of-week">F</div>
-  <div class="day-of-week">S</div>
+  {#each daysOfTheWeek as day}
+    <div class="day-of-week">{day}</div>
+  {/each}
 
-  <div></div>
-  <div></div>
-  <div> </div>
-  <div>1</div>
-  <div>2</div>
-  <div>3</div>
-  <div>4</div>
-  <div>5</div>
-  <div>6</div>
-  <div>7</div>
-  <div>8</div>
-  <div>9</div>
-  <div>10</div>
-  <div>11</div>
-  <div>12</div>
-  <div>13</div>
-  <div class="today">14</div>
-  <div>15</div>
-  <div>16</div>
-  <div>17</div>
-  <div>18</div>
-  <div>19</div>
-  <div>20</div>
-  <div>21</div>
-  <div>22</div>
-  <div>23</div>
-  <div>24</div>
-  <div>25</div>
-  <div>26</div>
-  <div>27</div>
-  <div>28</div>
-  <div>29</div>
-  <div>30</div>
-  <div>31</div>
-  <div></div>
+  {#each Array(weekCount * 7) as _, i}
+    {#if i < firstDayOfTheMonth || i > firstDayOfTheMonth + lastDateOfTheMonth - 1}
+      <div></div>
+    {:else if year === todayYear && month === todayMonth && i - firstDayOfTheMonth + 1 === todayDate}
+      <div class="today">{i - firstDayOfTheMonth + 1}</div>
+    {:else}
+      <div>{i - firstDayOfTheMonth + 1}</div>
+    {/if}
+  {/each}
 </div>
