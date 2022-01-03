@@ -10,7 +10,10 @@ body {
 
 .star-rating {
   display: flex;
-  gap: 30px;
+}
+
+.star {
+  padding: 15px;
 }
 
 .star svg {
@@ -18,21 +21,11 @@ body {
   stroke-width: 10px;
 }
 
-.star-1 .star-1 svg,
-.star-2 .star-1 svg,
-.star-2 .star-2 svg,
-.star-3 .star-1 svg,
-.star-3 .star-2 svg,
-.star-3 .star-3 svg,
-.star-4 .star-1 svg,
-.star-4 .star-2 svg,
-.star-4 .star-3 svg,
-.star-4 .star-4 svg,
-.star-5 .star-1 svg,
-.star-5 .star-2 svg,
-.star-5 .star-3 svg,
-.star-5 .star-4 svg,
-.star-5 .star-5 svg {
+.star-proposed svg {
+  fill: #FFD200;
+}
+
+.star-committed svg {
   stroke-width: 0;
   fill: #FFD200;
 }
