@@ -1,30 +1,23 @@
 <script>
-	export let name;
+  import FeaturedVideo from './FeaturedVideo.svelte';
+  import VideoGallery from './VideoGallery.svelte';
+
+  export let defaultEtag;
+  export let videos;
+
+  let featuredVideo = videos.items.find((video) => {
+    return video.etag === defaultEtag;
+  });
 </script>
 
-<main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
+<div class="wrapper">
+  <header>
+    <img src="images/logo.png" alt="YouTube" />
+  </header>
 
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
+  <FeaturedVideo bind:featuredVideo={featuredVideo} />
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
+  <aside>
+    <VideoGallery videos={videos.items} bind:featuredVideo={featuredVideo} />
+  </aside>
+</div>

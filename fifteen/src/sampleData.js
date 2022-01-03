@@ -1,4 +1,4 @@
-const sampleAPIResponse = {
+export const videoData = {
   "kind": "youtube#searchListResponse",
   "etag": "FyJyrKZhCoj9rjWCqpoH4b8vhGM",
   "nextPageToken": "CBQQAA",
